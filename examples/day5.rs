@@ -1,3 +1,5 @@
+use std::collections::{HashSet, HashMap};
+
 struct StringStats {
     input: String,
 }
@@ -39,6 +41,44 @@ impl StringStats {
         vovels.len() > 2
             && has_repeating_char == true
             && has_unwanted_sequence == false
+    }
+    
+
+
+    fn is_nice_string_new(&self) -> bool {
+        let mut vovels: Vec<char> = vec![];
+        let mut previous: char = '0';
+        let mut next: char = '0';
+        // It contains a pair of any two letters that appears at least twice in the string without overlapping, like xyxy (xy) or aabcdefgaa (aa), but not like aaa (aa, but it overlaps).
+        let mut condition_one = false;
+        // It contains at least one letter which repeats with exactly one letter between them, like xyx, abcdefeghi (efe), or even aaa.
+        let mut condition_two = false;
+
+        let mut pairs: HashMap<String, usize> = HashMap::new();
+
+        let mut previous_pair = "";
+        for (index, current) in self.input.chars().enumerate() {
+           
+            let next = self.input.chars().nth(index + 1);
+            let current_pair = format!("{}{}", current, next.unwrap_or('0'));
+
+            if current_pair == previous_pair {
+                return false;
+            }
+
+            if let Some(existing) = pairs.get(current_pair.as_str()) {
+                pairs.insert(current_pair, existing + 1);
+            }
+
+
+            if is_vowel(current) {
+                vovels.push(current);
+            }
+
+            previous = current;
+        }
+
+        true
     }
 }
 
