@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 
 struct StringStats {
     input: String,
@@ -6,9 +6,7 @@ struct StringStats {
 
 impl StringStats {
     fn new(input: String) -> StringStats {
-        StringStats {
-            input,
-        }
+        StringStats { input }
     }
 
     fn is_nice_string(&self) -> bool {
@@ -22,7 +20,7 @@ impl StringStats {
             }
 
             if current == previous {
-               has_repeating_char = true;
+                has_repeating_char = true;
             }
 
             if is_bad_sequence(current, previous) {
@@ -38,14 +36,10 @@ impl StringStats {
             self.input, vovels, has_repeating_char, has_unwanted_sequence
         );
         // checks if string is nice
-        vovels.len() > 2
-            && has_repeating_char == true
-            && has_unwanted_sequence == false
+        vovels.len() > 2 && has_repeating_char == true && has_unwanted_sequence == false
     }
-    
 
-
-    fn is_nice_string_new(&self) -> bool {
+    fn is_nice_string_2(&self) -> bool {
         let mut vovels: Vec<char> = vec![];
         let mut previous: char = '0';
         let mut next: char = '0';
@@ -56,29 +50,46 @@ impl StringStats {
 
         let mut pairs: HashMap<String, usize> = HashMap::new();
 
-        let mut previous_pair = "";
+        let mut previous_pair = String::from("");
+
         for (index, current) in self.input.chars().enumerate() {
-           
             let next = self.input.chars().nth(index + 1);
             let current_pair = format!("{}{}", current, next.unwrap_or('0'));
 
             if current_pair == previous_pair {
+                // println!("Condition made false {}, {}", previous_pair, current_pair);
                 return false;
             }
 
-            if let Some(existing) = pairs.get(current_pair.as_str()) {
-                pairs.insert(current_pair, existing + 1);
-            }
+            // println!("{}, {}", previous_pair, current_pair);
+            previous_pair = current_pair.clone();
 
+            if let Some(existing) = pairs.get(current_pair.as_str()) {
+                // println!("existing {}, {}", current_pair, existing);
+                pairs.insert(current_pair, existing + 1);
+                condition_one = true;
+            } else {
+                pairs.insert(current_pair, 1);
+            }
 
             if is_vowel(current) {
                 vovels.push(current);
             }
 
+            if let Some(value) = next {
+                if previous == value {
+                    // println!("prev {}, current {}", previous, value);
+                    condition_two = true;
+                }
+            }
+
             previous = current;
+
         }
 
-        true
+        // println!("condition 1 {}, condition 2 {}", condition_one, condition_two); 
+
+        condition_one && condition_two
     }
 }
 
@@ -96,17 +107,31 @@ fn is_bad_sequence(current: char, previous: char) -> bool {
 }
 
 struct App {
-    strings: Vec<StringStats>
+    strings: Vec<StringStats>,
 }
 
 impl App {
     fn new(strings: &str) -> App {
-       App { strings: strings.lines().map(|line| StringStats::new(line.to_string())).collect()}
+        App {
+            strings: strings
+                .lines()
+                .map(|line| StringStats::new(line.to_string()))
+                .collect(),
+        }
     }
 
     fn get_number_of_nice_strings(&mut self) -> u32 {
-       self.strings.iter().fold(0, |sum, stat| { 
+        self.strings.iter().fold(0, |sum, stat| {
             if stat.is_nice_string() {
+                return sum + 1;
+            }
+            sum
+        })
+    }
+
+    fn get_number_of_nice_strings_2(&mut self) -> u32 {
+        self.strings.iter().fold(0, |sum, stat| {
+            if stat.is_nice_string_2() {
                 return sum + 1;
             }
             sum
@@ -114,9 +139,15 @@ impl App {
     }
 }
 
-
 fn main() {
-    println!("{}", App::new(include_str!("../data/day5.txt")).get_number_of_nice_strings());
+    println!(
+        "{}",
+        App::new(include_str!("../data/day5.txt")).get_number_of_nice_strings()
+    );
+    println!(
+        "{}",
+        App::new(include_str!("../data/day5.txt")).get_number_of_nice_strings_2()
+    );
 }
 
 #[cfg(test)]
@@ -129,10 +160,7 @@ pub mod test {
             true
         );
 
-        assert_eq!(
-            StringStats::new("aaa".to_string()).is_nice_string(),
-            true
-        );
+        assert_eq!(StringStats::new("aaa".to_string()).is_nice_string(), true);
         assert_eq!(
             StringStats::new("jchzalrnumimnmhp".to_string()).is_nice_string(),
             false
@@ -145,5 +173,14 @@ pub mod test {
             StringStats::new("dvszwmarrgswjxmb".to_string()).is_nice_string(),
             false
         );
+    }
+
+
+    #[test]
+    fn test_2() {
+        assert_eq!(StringStats::new("qjhvhtzxzqqjkmpb".to_string()).is_nice_string_2(), true);
+        assert_eq!(StringStats::new("xxyxx".to_string()).is_nice_string_2(), true);
+        assert_eq!(StringStats::new("uurcxstgmygtbstg".to_string()).is_nice_string_2(), false);
+        assert_eq!(StringStats::new("ieodomkazucvgmuy".to_string()).is_nice_string_2(), false);
     }
 }
